@@ -1,7 +1,7 @@
 <?php
 // Static
 include 'c/index.php';
-new page('helloworld');
+new Page('helloworld');
 
 // If you want to use $_GET (Look into .htaccess for more functionality):
 //

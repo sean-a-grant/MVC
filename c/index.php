@@ -5,7 +5,7 @@
  * This is named index to prevent people from looking inside of the directory, I'm lazy.
 */
 
-class page {
+class Page {
 	/*
 	 * __construct(string $page, bool $nostyle=false)
 	 * This is called when page is created. Arguments are passed through page when it is created.
