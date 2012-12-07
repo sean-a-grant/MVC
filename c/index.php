@@ -1,7 +1,7 @@
 <?php
 /*
  * c/index.php
- * This is the controller. To make a new page, call 'new page($pagename);'
+ * This is the controller. To make a new page, call 'new Page($pagename);'
  * This is named index to prevent people from looking inside of the directory, I'm lazy.
 */
 
