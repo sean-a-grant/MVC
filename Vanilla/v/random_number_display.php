@@ -1,1 +1,1 @@
-<h3>Your random number is <?php echo $random_number; echo (isset($random_number)) ? $random_number : '(there was an error)'; ?></h3>
+<h3>Your random number is <?php echo (isset($random_number)) ? $random_number : '(there was an error)'; ?></h3>
