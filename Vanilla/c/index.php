@@ -7,12 +7,15 @@
 
 class Page {
 	/*
-	 * __construct(string $page, bool $nostyle=false)
-	 * This is called when page is created. Arguments are passed through page when it is created.
-	 * This will include all classes which will be available for use in m/$page.php or v/default.php
-	 * Using heavy logic in v/default.php is discouraged
-	 * v/default.php will not be included if $nostyle is set to true, and instead $content will be echo'd	*/
-	public function __construct($page, $nostyle=false){
+	 * __construct(string $mode)
+	 * This will do the following in order:
+	 * 1. Start the session
+	 * 2. Include all includes and the singleton class
+	 * 3. Include the model
+	 * 
+	 * It is the model's responsibility to load the view. Load the view through Page::loadView('theview')
+	*/
+	public function __construct($model){
 		/* Run startup scripts */
 		if(!isset($_SESSION)){
 			session_start();
@@ -34,21 +37,14 @@ class Page {
 			die("The site has not been setup correctly");
 		}
 
-		$content = ''; // Initialize content variable
-		$page = preg_replace("[^A-Za-z0-9/]", "", $page); // Sanitize the page to prevent unauthorized access
+		$model = preg_replace("[^A-Za-z0-9/]", "", $model); // Sanitize the page to prevent unauthorized access
+		include 'm/' . $model . '.php';
+	}
 
-		/* Include model file */
-		if(file_exists("m/" . $page . ".php")){
-			include "m/" . $page . ".php";
-		} else {
-			include "m/404.php";
-		}
-
-		if(!$nostyle){
-			include "v/default.php";
-		} else {
-			echo $content;
-		}
+	public function loadView($view){
+		include 'v/inc/header.php';
+		include "v/" . preg_replace("[^A-Za-z0-9/]", "", $view) . ".php";
+		include 'v/inc/footer.php';
 	}
 }
 ?>
