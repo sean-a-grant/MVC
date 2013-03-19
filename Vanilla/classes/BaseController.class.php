@@ -31,7 +31,7 @@ abstract class BaseController {
 		$view->_contents = ob_get_contents();
 		ob_end_clean();
 		if($ajax){
-			echo $template_contents;
+			echo $view->_contents;
 		} else {
 			require _ROOT . '/views/template.php';
 		}
