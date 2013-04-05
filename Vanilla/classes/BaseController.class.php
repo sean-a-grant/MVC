@@ -85,6 +85,5 @@ abstract class BaseController {
 		} else {
 			return new Error('Error: View (' . $viewloc . ') is missing');
 		}
-		
 	}
 }
