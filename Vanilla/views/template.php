@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Hello, world</title>
+
 	</head>
 	<body>
-		Your are loading this page using the main template!<br />
+		<h1>MVC</h1>
 		<?php echo $view->_contents; ?>
 	</body>
-</html>
+</html>	

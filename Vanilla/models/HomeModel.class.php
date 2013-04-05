@@ -1,6 +1,6 @@
 <?php
 class HomeModel extends BaseModel {
-	public function index(){
-		return "Creativecoding is online";
+	public function user_status(){
+		return "Online";
 	}
 }

@@ -1,2 +1,1 @@
-Hello, and welcome to my site!<br /><br />
-<?php echo $view->online_status; ?>
+User is: <?php echo $view->user_status; ?>

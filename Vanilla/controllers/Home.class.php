@@ -1,8 +1,8 @@
 <?php
 class Home extends BaseController {
 	public function index(){
-		$homemodel = new HomeModel();
-		$this->view->online_status = $homemodel->index();
+		$home = new HomeModel();
+		$this->view->user_status = $home->user_status();
 		$this->displayView();
 	}
 }

@@ -1,47 +1,55 @@
 <?php
+/*
+ * Loader.class.php
+ * The loader class is used to create webpages
+*/
 class Loader {
 	private $controller;
 	private $action;
 	private $urlValues;
+	private $postValues;
 
 	/* 
 	 * Store our URL request and identify controller and action.
 	 * If controller is not defined, it will be home.
 	 * If action is not defined, it will be index.
 	*/
-	public function __construct($request){
+	public function __construct($request, $posts){
 		// Set up autoloading
 		spl_autoload_register("self::autoload");
-
+		
 		// Detect controller/action
 		$this->urlValues = $request;
-		if(empty($this->urlValues['controller'])){
+		$this->postValues = $posts;
+		
+		if(empty($this->urlValues['controller'])){ // Gonna assume the user is on the homepage
 			$this->controller = "Home";
-		} else {
-			$this->controller = $this->urlValues['controller'];
-		}
-		if(empty($this->urlValues['action'])){
 			$this->action = "index";
 		} else {
-			$this->action = $this->urlValues['action'];
+			$this->controller = $this->urlValues['controller'];
+			$this->action = isset($this->urlValues['action']) ? $this->urlValues['action'] : "index";
 		}
+
+		$controller = $this->createController();
+		$controller->executeAction();
 	}
 
 	/*
 	 * Create and return the controller used for the request.
 	*/
 	public function createController(){
-		if(file_exists(_ROOT . '/controllers/' . $this->controller . '.class.php')){
-			require _ROOT . '/controllers/' . $this->controller . '.class.php';
-			if(class_exists($this->controller)){
+		if(file_exists(_ROOT . '/controllers/' . $this->controller . '.class.php')){ // Does the controller exist?
+			require _ROOT . '/controllers/' . $this->controller . '.class.php'; // Include it
+			if(class_exists($this->controller)){ // Does the correct class exist?
 				$parents = class_parents($this->controller);
 				if(in_array("BaseController", $parents)){
-					if(method_exists($this->controller, $this->action)){
-						return new $this->controller($this->action, $this->urlValues);
+					if(method_exists($this->controller, $this->action) || method_exists($this->controller, '__call')){ // does the controller have the requested action? Maybe a _call for dynamic actions?
+						return new $this->controller($this->action, $this->urlValues, $this->postValues); // Yes! Make the controller and pass on the action, GET variables, and POST variables
 					}
 				}
 			}
 		}
+		var_dump($this->urlValues);
 		return new Error("badUrl", $this->urlValues);
 	}
 
