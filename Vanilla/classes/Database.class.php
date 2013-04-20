@@ -4,7 +4,7 @@ class Database {
 	private $host     = "localhost";
 	private $username = "root";
 	private $password = "";
-	private $database = "smite";
+	private $database = "ticket_mvc";
 	
 	// Our PDO link
 	private $PDO;
@@ -25,21 +25,10 @@ class Database {
 	*/
 	public function insert($table, $data){
 		try {
-			$keys = array_keys($data);
-			$cols = $keys[0];
-			$values = ':' . $keys[0];
-			for($i = 1; $i < count($keys); $i++){
-				$cols .= ', ' . $keys[$i];
-				if($data[$keys[$i]] == "CURRENT_TIMESTAMP" || $data[$keys[$i]] == "NOW()"){
-					$values .= ', ' . $data[$keys[$i]];
-					unset($data[$keys[$i]]);
-				} else {
-					$values .= ', :' . $keys[$i];
-				}
-			}
-			$sql = 'INSERT INTO `' . $table . '`(' . $cols . ') VALUES (' . $values . ')';
+			$values = $this->convertArrayToSQL(',', $data);
+			$sql = 'INSERT INTO `' . $table . '` SET ' . $values[0];
 			$sth = $this->PDO->prepare($sql);
-			$sth->execute($data);
+			$sth->execute($values[1]);
 			if($sth->rowCount() > 0){
 				return true;
 			}
@@ -59,36 +48,107 @@ class Database {
 	*/
 	public function select($table, $where){
 		try {
-			$i = 0;
-			$stuff = '';
-			$prev_value = '';
-			foreach($where as $key => $value){
-				if(strtolower($value) != "or"){
-					if($i != 0){
-						if(strtolower($prev_value) == "or"){
-							$stuff .= ' OR ';
-						} else {
-							$stuff .= ' AND ';
-						}
-					}
-					$stuff .= '`' . $key . '` = :' . $key;
-					$where[':' . $key] = $value;
-					unset($where[$key]);
-				} else {
-					unset($where[$key]);
-				}
-				$i++;
-				$prev_value = $value;
-			}
-			$sql = 'SELECT * FROM `' . $table . '` WHERE ' . $stuff;
+			$sqlInfo = $this->convertArrayToSQL('AND', $where);
+			if(empty($sqlInfo[0])) $sqlInfo[0] = '1=1';
+			$sql = 'SELECT * FROM `' . $table . '` WHERE ' . $sqlInfo[0];
 			$sth = $this->PDO->prepare($sql);
-			$sth->execute($where);
+			$sth->execute($sqlInfo[1]);
 			$result = $sth->fetchAll();
-			if(!isset($result[1])){
-				return $result[0]; // If only one row is returned, return just that row
-			}
+			return $result;
 		} catch(PDOException $e){
 			new Error('PDOException: ' . $e->getMessage());
 		}
+	}
+
+	/*
+	 * update(string $table, array $set, array $where=array())
+	 * Updates table with the new values (an associative array of column => new value). If $where is defined, the only rows that will be affected are those that match $where.
+	 * Where isn't required. If where is not provided, all rows will be updated.
+	 * Returns int with number of rows changed
+	 * WARNING: 0 rows changed would be a successful query, but will still match false. Make sure you use === to test!
+	*/
+	public function update($table, $set, $where=array()){
+		try {
+			if(empty($where)) $where = array("1" => "1");
+			$data = $this->convertArrayToSQL(', ', $set, array("WHERE"), $where); // ;_; this design pattern sucks
+			$sql = 'UPDATE `' . $table . '` SET ' . $data[0];
+			$sth = $this->PDO->prepare($sql);
+			$sth->execute($data[1]);
+			return $sth->rowCount();
+		} catch (PDOException $e){
+			new Error('PDOException: ' . $e->getMessage());
+		}
+	}
+
+	/*
+	 * delete(string $table, array $where)
+	 * Deletes rows from $table that match $where
+	 * If $where is empty, all rows will be deleted
+	 * Returns number of rows affected.
+	 * WARNING: 0 rows changed would be a successful query, but will still match false. Make sure your use the === comparitive operator.
+	*/
+	public function delete($table, $where){
+		try {
+			$sql = 'DELETE FROM `' . $table . '` WHERE ';
+			$prepare_data = array();
+			if(empty($where)){
+				$sql .= '1=1';
+			} else {
+				$data = $this->convertArrayToSQL('AND', $where);
+				$sql .= $data[0];
+				$prepare_data = $data[1];
+			}
+			$sth = $this->PDO->prepare($sql);
+			$sth->execute($prepare_data);
+			return $sth->rowCount();
+		} catch(PDOException $e){
+			new Error('PDOException: ' . $e->getMessage());
+		}
+	}
+
+	/*
+	 * convertArrayToSQL(string $seperator, array $data, array $data2, array $data3, ...)
+	 * Turns the given arrays into a prepared-statement ready SQL query, and returns both the SQL query AND the proper array for executing the query
+	 * You can use an unlimited amount of arguments by the way. This is to allow duplicate keys. 
+	 * $seperator is what is put between each dataset. IE "and" would make something like "`column` = :column0 AND `hola` = :hola0"
+	 * Returns array([0] => The SQL query, [1] => The prepared statement data)
+	*/
+	private function convertArrayToSQL($seperator, $data){ // Requires at least two params
+		$sql = ''; // SQL query to return
+		$data = array(); // Prepared statement data to return
+		$arguments = func_get_args();
+		$dont_put_and = false; // If true next value will not have "and" before it. We put this out here because multiple arguments go into the same query.
+
+		for($argument_index=1; $argument_index<func_num_args(); $argument_index++){ // Loop through each argument. Skip 1 because that's our seperator
+			$argument_iteration = 0;
+			foreach($arguments[$argument_index] as $key => $value){ // Loop through each key/value
+				if($value == "OR" || $value == "WHERE"){
+					$sql .= ' ' . $value . ' ';
+					$dont_put_and = true; // This is a hack because I hate my life
+					continue;
+				} else {
+					if(($argument_iteration > 0 || $argument_index > 1) && !$dont_put_and){
+						$sql .= ' ' . $seperator . ' ';
+					}
+				}
+				$dont_put_and = false; // Well value must have been data, so we should probably put and after it :)
+
+				/* Now we need to put our keys in the SQL statement in the form of "`table_key` = :prepared_statement_key" */
+				/* We also have to check for duplicates */
+				$dup_key_count = 0;
+				while(strpos($sql, ':' . $key . $dup_key_count) == true){
+					$dup_key_count++;
+				}
+				$sql .= '`' . $key . '` = '; // Set column key...
+				if($value == "CURRENT_TIMESTAMP"){
+					$sql .= 'CURRENT_TIMESTAMP';
+				} else {
+					$sql .= '?';
+					$data[] = $value;
+				}
+				$argument_iteration++;
+			}
+		}
+		return array($sql, $data);
 	}
 }
