@@ -13,51 +13,15 @@ abstract class BaseController {
 		$this->view = new View();
 
 		/* Basic startup scripts for the page */
-		$this->setupGlobalView();
 		if(!isset($_SESSION)){
 			session_start();
 		}
 	}
 
 	/*
-	 * setupGlobalView()
-	 * This sets up the view with site-wide variables
+	 * executeAction()
+	 * Basically loads the page that was requested (the action)
 	*/
-	public function setupGlobalView(){
-		$this->view->navbar = array(
-			array(
-					"name" => "Premier League",
-					"href" => "#",
-					"children" => array(
-						array(
-								"name" => "Something",
-								"href" => "#"
-								),
-						array(
-								"name" => "Yo what's up",
-								"href" => "#"
-								)
-					)
-				),
-			array(
-					"name" => "Free League",
-					"href" => "#"
-				),
-			array(
-					"name" => "Events",
-					"href" => "#"
-				),
-			array(
-					"name" => "Downloads",
-					"href" => "#"
-				),
-			array(
-					"name" => "Support",
-					"href" => "#"
-				)
-			);
-	}
-
 	public function executeAction(){
 		return $this->{$this->action}();
 	}
