@@ -13,7 +13,7 @@ abstract class BaseController {
 		$this->view = new View();
 
 		/* Basic startup scripts for the page */
-		if(!isset($_SESSION)){
+		if(!isset($_SESSION) && _enable_sessions){
 			session_start();
 		}
 	}

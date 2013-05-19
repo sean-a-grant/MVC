@@ -1,13 +1,10 @@
 <?php
-// Define the root of our project
-define("_ROOT", dirname(__FILE__));
-// Define the site root of our project (the WWW accessible layer)
-define("_SITE_ROOT", $_SERVER['SERVER_NAME']);
-
 // Debug
-error_reporting(E_ALL);
+require("classes/php_error.php");
+\php_error\reportErrors();
 
 // Our general classes
+require "settings.php";
 require "classes/Loader.class.php";
 require "classes/BaseController.class.php";
 require "classes/BaseModel.class.php";

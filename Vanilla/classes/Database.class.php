@@ -1,10 +1,10 @@
 <?php
 class Database {
 	/* Connection info */
-	private $host     = "localhost";
-	private $username = "root";
-	private $password = "";
-	private $database = "ticket_mvc";
+	private $host     = _database_hostname;
+	private $username = _database_username;
+	private $password = _database_password;
+	private $database = _database_database;
 	
 	// Our PDO link
 	private $PDO;
